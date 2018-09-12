@@ -1,0 +1,55 @@
+a {
+  text-decoration: none;
+  list-style-type: none;
+}
+
+.container {
+  display: flex;
+  flex-flow: column wrap;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+}
+
+.artistImage {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+}
+
+.authButtons {
+  display: flex;
+  width: 35%;
+  justify-content: space-between;
+}
+
+.nameAndButton {
+  display: flex;
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+}
+
+.username {
+  padding-left: 2%;
+  flex-grow: 1;
+  align-self: center;
+}
+
+.snackbar {
+  width: 30%;
+}
+
+.infoWindow {
+  text-align: center;
+}
+
+@media screen and (max-width: 920px) {
+  .authButtons {
+    flex-direction: column;
+  }
+}
