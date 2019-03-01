@@ -19,6 +19,9 @@ Be sure to install the following packages to use the application:
 * cookie-parser
 * messagebird
 * cors
+* jsonwebtoken
+* bcrypt
+* mongoose
 
 ## Usage
 
