@@ -20,11 +20,13 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Toolbar from '@material-ui/core/Toolbar';
 import SpotifyWebApi from 'spotify-web-api-js';
 
-const serverUrl = 'http://localhost:8888';
-const clientUrl = 'http://localhost:3000';
+const serverUrl = 'https://auth-server-bh.herokuapp.com';
+const clientUrl = 'https://concert-lookup-bh.herokuapp.com';
 
-// const serverUrl = 'https://auth-server-bh.herokuapp.com';
-// const clientUrl = 'https://concert-lookup-bh.herokuapp.com';
+//For development purposes
+// const serverUrl = 'http://localhost:8888';
+// const clientUrl = 'http://localhost:3000';
+
 const spotifyApi = new SpotifyWebApi();
 const apiKey = 'r0iwmceSJAq5Ynt1';
 let authID = localStorage.getItem('currentID');

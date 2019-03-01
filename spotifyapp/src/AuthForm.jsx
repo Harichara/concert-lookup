@@ -10,8 +10,11 @@ import Snackbar from '@material-ui/core/Snackbar';
 import withStyles from '@material-ui/core/styles/withStyles';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
-const serverUrl = 'http://localhost:8888';
-// const serverUrl = 'https://auth-server-bh.herokuapp.com';
+const serverUrl = 'https://auth-server-bh.herokuapp.com';
+
+//For development purposes
+// const serverUrl = 'http://localhost:8888';
+
 const style = theme => ({
   layout: {
     display: 'block',
