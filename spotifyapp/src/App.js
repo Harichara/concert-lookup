@@ -32,6 +32,15 @@ class App extends Component {
                       />
                   )
                 }}/>
+            <Route exact path='/verify' render={props => {
+              return(
+                <AuthForm
+                  buttonText='Verify my number!'
+                  heading='Verify your number'
+                  {...props}
+                  />
+              )
+            }}/>
           </Switch>
         </BrowserRouter>
       </div>

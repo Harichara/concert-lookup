@@ -10,7 +10,8 @@ import Snackbar from '@material-ui/core/Snackbar';
 import withStyles from '@material-ui/core/styles/withStyles';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 
-const serverUrl = 'https://auth-server-bh.herokuapp.com';
+const serverUrl = 'http://localhost:8888';
+// const serverUrl = 'https://auth-server-bh.herokuapp.com';
 const style = theme => ({
   layout: {
     display: 'block',
@@ -46,12 +47,14 @@ const theme = createMuiTheme({
 
 const styles = style(theme);
 
-  class AuthForm extends Component {
+class AuthForm extends Component {
+
   constructor(props) {
     super(props);
     this.state = {
       username: '',
       password: '',
+      number: '',
       snackBarState: false,
       snackBarMessage: ''
     }
@@ -71,28 +74,83 @@ const styles = style(theme);
     });
   }
 
-  handleSubmit = e => {
+  handleSubmit = async e => {
     e.preventDefault();
     const authType = this.props.signUp ? "signup" : "signin";
-    fetch(`${serverUrl}/api/auth/${authType}`,{
-      method: 'post',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        username: this.state.username,
-        password: this.state.password
-      })
-    })
-    .then(resp => resp.json())
-    .then(data => {
-      if(data.error) {
-        this.handleSnackBarOpen(data.error.message);
-      } else {
-        localStorage.setItem('currentID', data.id);
-        localStorage.setItem('currentToken', data.token);
-        window.location.replace('/');
-      }
+    
+    //Request to node server for user to sign in
+    let authReq = await fetch(`${serverUrl}/api/auth/${authType}`,{
+                                                              method: 'post',
+                                                              headers: {'Content-Type':'application/json'},
+                                                              body: JSON.stringify({
+                                                                username: this.state.username,
+                                                                password: this.state.password,
+                                                                number: this.state.number
+                                                              })
     });
+
+    let authRes = await authReq.json();
+
+    if(authRes.error) {
+      this.handleSnackBarOpen(authRes.error.message);
+    } else {
+
+      localStorage.setItem('currentID', authRes.id);
+      localStorage.setItem('currentToken', authRes.token);
+
+      if(authRes.number === '') {
+        window.location.replace('/');
+      } else {
+        //If user has a number with their account then send a request to messagebird API to get verification code
+        let codeReq = await fetch(`${serverUrl}/createcode`, {
+                                                              method:'post',
+                                                              headers: {'Content-Type':'application/json'},
+                                                              body: JSON.stringify({
+                                                                number: authRes.number
+                                                              })
+        });
+
+       let codeRes = await codeReq.json();
+
+       localStorage.setItem('codeID', codeRes.id);
+
+        window.location.replace('/verify');
+      }
+    }
   };
+
+  handleVerifySubmit = async e => {
+    e.preventDefault();
+    try {            
+      let codeId = localStorage.getItem('codeID');
+      let tokenNum = this.state.number;
+      
+      //Verifies user with 2FA
+      let verifyReq = await fetch(`${serverUrl}/verify`, {
+                                                            method: 'post',
+                                                            headers: {'Content-Type':'application/json'},
+                                                            body: JSON.stringify({
+                                                              id: codeId,
+                                                              token: tokenNum
+                                                            })                                              
+      })
+      
+      let verifyRes = await verifyReq.json();
+
+
+      //If user is verified with 2FA then redirect to the main application page
+      if(verifyRes.status === 'verified') {
+        this.props.history.push('/');
+      }
+
+
+    } catch (err) {
+      this.setState({
+        open: !this.state.snackBarState,
+        snackBarMessage: err
+      })
+    }
+  }
 
   handleChange = e => {
     this.setState({
@@ -107,6 +165,8 @@ const styles = style(theme);
   }
 
   render() {
+    let { pathname } = this.props.location;
+
     return (
       <MuiThemeProvider theme={theme}>
         <main style={styles.layout}>
@@ -120,34 +180,81 @@ const styles = style(theme);
               message={<span>{this.state.snackBarMessage}</span>}
               />
             <Typography variant="headline">{this.props.heading}</Typography>
-            <form style={styles.form} onSubmit={this.handleSubmit}>
-              <FormControl margin="normal" required fullWidth>
-                <InputLabel htmlFor="username">Username</InputLabel>
-                <Input id="username" name="username" autoComplete="username" autoFocus onChange={this.handleChange} />
-              </FormControl>
-              <FormControl margin="normal" required fullWidth>
-                <InputLabel htmlFor="password">Password</InputLabel>
-                <Input
-                  name="password"
-                  type="password"
-                  id="password"
-                  autoComplete="current-password"
-                  onChange={this.handleChange}
-                />
-              </FormControl>
-              <Button
-                type="submit"
-                fullWidth
-                variant="raised"
-                color="secondary"
-                style={styles.submit}
-              >
-                {this.props.buttonText}
-              </Button>
-            </form>
-            <Button color='secondary' variant='outlined' style={styles.submit} onClick={this.handleRedirect}>
-              {this.props.redirectButton}
-            </Button>
+
+            {
+              pathname !== '/verify' && (
+                <form style={styles.form} onSubmit={this.handleSubmit}>
+                    <FormControl margin="normal" required fullWidth>
+                      <InputLabel htmlFor="username">Username</InputLabel>
+                      <Input id="username" name="username" autoComplete="username" autoFocus onChange={this.handleChange} />
+                    </FormControl>
+                    <FormControl margin="normal" required fullWidth>
+                      <InputLabel htmlFor="password">Password</InputLabel>
+                      <Input
+                        name="password"
+                        type="password"
+                        id="password"
+                        autoComplete="current-password"
+                        onChange={this.handleChange}
+                      />
+                    </FormControl>
+
+                    {
+                      pathname === '/signup' && (
+                        <FormControl margin="normal" fullWidth>
+                          <InputLabel htmlFor="number">Phone # for 2FA (Optional, add country code before number e.g. +1 for USA)</InputLabel>
+                          <Input
+                            name="number"
+                            id="number"
+                            autoComplete="current-phone-number"
+                            onChange={this.handleChange}
+                          />
+                        </FormControl>
+                      )
+                    }
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="raised"
+                    color="secondary"
+                    style={styles.submit}
+                  >
+                    {this.props.buttonText}
+                  </Button>
+
+                  <Button color='secondary' variant='outlined' style={styles.submit} onClick={this.handleRedirect}>
+                    {this.props.redirectButton}
+                  </Button>
+                </form>
+              )
+            }
+
+            {
+              pathname === '/verify' && (
+                <form style={styles.form} onSubmit={this.handleVerifySubmit}>
+                    <FormControl margin="normal" required fullWidth>
+                      <InputLabel htmlFor="number">Enter Code</InputLabel>
+                      <Input
+                        name="number"
+                        id="number"
+                        autoComplete="current-number"
+                        onChange={this.handleChange}
+                      />
+                    </FormControl>
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="raised"
+                    color="secondary"
+                    style={styles.submit}
+                  >
+                    {this.props.buttonText}
+                  </Button>
+                </form>
+              )
+            }
           </Paper>
         </main>
       </MuiThemeProvider>

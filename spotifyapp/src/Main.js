@@ -20,8 +20,11 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Toolbar from '@material-ui/core/Toolbar';
 import SpotifyWebApi from 'spotify-web-api-js';
 
-const serverUrl = 'https://auth-server-bh.herokuapp.com';
-const clientUrl = 'https://concert-lookup-bh.herokuapp.com';
+const serverUrl = 'http://localhost:8888';
+const clientUrl = 'http://localhost:3000';
+
+// const serverUrl = 'https://auth-server-bh.herokuapp.com';
+// const clientUrl = 'https://concert-lookup-bh.herokuapp.com';
 const spotifyApi = new SpotifyWebApi();
 const apiKey = 'r0iwmceSJAq5Ynt1';
 let authID = localStorage.getItem('currentID');
@@ -234,7 +237,7 @@ class Main extends Component {
     });
   }
 
-//Searchs for artist on songkick and sets their songkick ID
+//Searches for artist on songkick and sets their songkick ID
   setArtistId(artist){
     fetch(`https://api.songkick.com/api/3.0/search/artists.json?apikey=${apiKey}&query=${artist}`)
     .then(resp => resp.json())
