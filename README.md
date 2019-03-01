@@ -40,3 +40,7 @@ https://github.com/JMPerez/spotify-player
 
 https://github.com/fullstackreact/google-maps-react
 * A declarative Google Map React component using React, lazy-loading dependencies, current-location finder and a test-driven approach by the Fullstack React team.
+
+https://github.com/mui-org/material-ui
+* React components that implement Google's Material Design.
+* https://material-ui.com/
