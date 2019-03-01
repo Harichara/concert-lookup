@@ -4,6 +4,7 @@ const request = require('request'); // "Request" library
 const querystring = require('querystring');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const messagebird = require('messagebird')(process.env.MESSAGEBIRD_API_KEY);
 const cors = require('cors');
 const errorHandler = require('../handlers/error');
 const authRoutes = require('../routes/auth');
@@ -11,10 +12,13 @@ const { loginRequired, ensureCorrectUser } = require('../middleware/auth');
 const artistRoutes = require('../routes/artists');
 const db = require('../models');
 
-const client_id = 'YOUR_CLIENT_ID'; // Your client id
-const client_secret = 'YOUR_CLIENT_SECRET'; // Your secret
+const client_id = process.env.SPOTIFY_CLIENT_ID; // Your client id
+const client_secret = process.env.SPOTIFY_CLIENT_SECRET; // Your secret
 const redirect_uri = 'https://auth-server-bh.herokuapp.com/callback'; // Your redirect uri
 const clientUrl = 'https://concert-lookup-bh.herokuapp.com';
+//For Development Purposes
+// const clientUrl = 'http://localhost:3000';
+// const redirect_uri = 'http://localhost:8888/callback';
 
 const PORT = process.env.PORT || 8888;
 
@@ -64,6 +68,36 @@ app.get('/api/artists/:id',loginRequired, async function(req, res, next) {
   } catch(err) {
       return next(err);
   }
+});
+
+
+//Creates and sends verification token through SMS for two-factor authentication
+app.post('/createcode', function(req, res) {
+  let number = req.body.number;
+  messagebird.verify.create(number, {
+      originator : 'Code',
+      template : 'Your verification code is %token.'
+  }, function (err, response) {
+      if (err) {
+          console.log(err);
+      } else {
+          res.status(200).json(response);
+      }
+  })
+});
+
+
+//Verifies SMS token for two-factor authentication
+app.post('/verify', function(req, res) {
+  let id = req.body.id;
+  let token = req.body.token;
+  messagebird.verify.verify(id, token, function(err, response) {
+      if (err) {
+          console.log(err);
+      } else {
+          res.status(200).json(response);
+      }
+  })
 });
 
 app.use(errorHandler);
